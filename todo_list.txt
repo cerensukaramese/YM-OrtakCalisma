@@ -2,3 +2,5 @@ yazılım mühendisliği için verilen ödevi yap | ✓
 2 litre su iç | X
 sınavlar yaklaştı ders çalış | X
 spora git | ✓
+oyun hamuru al | ✓
+staj başvurusu yap | X
