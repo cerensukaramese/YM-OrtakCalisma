@@ -1,11 +1,11 @@
 import os
+import tkinter as tk
+from tkinter import messagebox
 TODO_FILE = "todo_list.txt"
 
 def gorevleri_yukle():
-
     if not os.path.exists(TODO_FILE):
         return[]
-    
     with open(TODO_FILE,"r", encoding="utf-8") as file:
         return[satır.strip().split(" | ") for satır in file.readlines()]
     
@@ -15,96 +15,80 @@ def gorevleri_kaydet(gorevler):
         for gorev, durum in gorevler:    
             file.write(f"{gorev} | {durum}\n")
 
-
-def gorev_ekle(gorev):
-    gorevler=gorevleri_yukle()
-    gorevler.append([gorev," -"]) 
-    gorevleri_kaydet(gorevler)
-    print(f"'{gorev}' eklendi ve kaydedildi!") 
-
-def gorevleri_listele():
-    gorevler=gorevleri_yukle()
-    if not gorevler:
-        print("Gorev listesi boş.")
-
-    else:
-        print("***Yapılacaklar Listesi:***")
-        for i,(gorev,durum) in enumerate(gorevler,1):
-            print(f"{i}.[{durum}] {gorev}")
-
-
-def gorev_tamamla(index):
-    gorevler=gorevleri_yukle()
-    if 0< index <=len(gorevler):
-        gorevler[index-1][1]="ok"
+def gorev_ekle():
+    gorev = entry_gorev.get()
+    if gorev.strip():
+        gorevler = gorevleri_yukle()
+        gorevler.append([gorev, 'X'])
         gorevleri_kaydet(gorevler)
-        print(f"+'{gorevler[index-1][0]}'tamamlandı!")
+        entry_gorev.delete(0, tk.END)
+        gorevleri_guncelle()
+        messagebox.showinfo("Başarılı", f"'{gorev}' eklendi!")
     else:
-        print("Geçersiz görev numarası!")    
+        messagebox.showwarning("Uyarı", "Boş görev eklenemez!")
 
+def gorevleri_guncelle():
+    listbox_gorevler.delete(0, tk.END)
+    gorevler = gorevleri_yukle()
+    for i, (gorev, durum) in enumerate(gorevler, 1):
+        listbox_gorevler.insert(tk.END, f"{i}. [{durum}] {gorev}")
 
-def gorev_sil(index):
-    gorevler=gorevleri_yukle()
-    if 0< index <=len(gorevler):
-        silinen=gorevler.pop(index-1)
+def gorev_tamamla():
+    secili_index = listbox_gorevler.curselection()
+    if secili_index:
+        index = secili_index[0]
+        gorevler = gorevleri_yukle()
+        gorevler[index][1] = '✓'
         gorevleri_kaydet(gorevler)
-        print(f"'{silinen[0]}' silindi!")
+        gorevleri_guncelle()
+        messagebox.showinfo("Başarılı", f"'{gorevler[index][0]}' tamamlandı!")
     else:
-        print("Geçersiz görev numarası!")
+        messagebox.showwarning("Uyarı", "Tamamlanacak bir görev seçin!")
 
-
-
-while True:
-    print("***Yapılacaklar Listesi Uygulaması***")
-    print("1 Görev Ekle")
-    print("2 Görevleri Listele")  
-    print("3 Görevi Tamamla")  
-    print("4 Görev Sil")  
-    print("5 Çıkış")
-
-    seçim= input("Ne yapmak istiyorsunuz?")
-
-
-    if seçim=="1":
-        gorev=input("Eklemek istediğiniz görevi yazın:")
-        gorev_ekle(gorev)
-    elif seçim=="2":
-        gorevleri_listele()
-    elif seçim=="3":
-        gorevleri_listele()
-        index=int(input("Tamamlanan görev numarasını girin:"))
-        gorev_tamamla(index)
-
-    elif seçim=="4":
-        gorevleri_listele()
-        index=int(input("Silmek istediğiniz görev numarasını girin: "))
-        gorev_sil(index)
-
-    elif seçim=="5":
-        print("Çıkış yapıldı.Görevleriniz kaydedildi!")
-        break
+def gorev_sil():
+    secili_index = listbox_gorevler.curselection()
+    if secili_index:
+        index = secili_index[0]
+        gorevler = gorevleri_yukle()
+        silinen = gorevler.pop(index)
+        gorevleri_kaydet(gorevler)
+        gorevleri_guncelle()
+        messagebox.showinfo("Başarılı", f"'{silinen[0]}' silindi!")
     else:
-        print("Geçersiz seçim, tekrar deneyin...")
-                                 
+        messagebox.showwarning("Uyarı", "Silinecek bir görev seçin!")
 
+def cikis():
+    root.destroy()
 
+# ui - tkinter
+root = tk.Tk()
+root.title("Yapılacaklar Listesi")
+root.geometry("650x750")
+root.configure(bg="#F8E8EE")
 
+label_baslik = tk.Label(root, text=" Yapılacaklar Listesi ", font=("Helvetica", 18, "bold"), bg="#F8E8EE", fg="#9B59B6")
+label_baslik.pack(pady=20)
 
+frame_gorev = tk.Frame(root, bg="#F8E8EE")
+frame_gorev.pack(pady=10)
 
+entry_gorev = tk.Entry(frame_gorev, width=40, font=("Helvetica", 12), bg="#FDE2E4", fg="#6C3483", borderwidth=2)
+entry_gorev.pack(side=tk.LEFT, padx=5)
 
+btn_ekle = tk.Button(frame_gorev, text="Ekle", command=gorev_ekle, font=("Helvetica", 12), bg="#D291BC", fg="white", borderwidth=2)
+btn_ekle.pack(side=tk.RIGHT)
 
+listbox_gorevler = tk.Listbox(root, width=50, height=15, selectmode=tk.SINGLE, font=("Helvetica", 12), bg="#FDE2E4", fg="#6C3483", selectbackground="#D291BC", selectforeground="white", borderwidth=2)
+listbox_gorevler.pack(pady=10)
 
+btn_tamamla = tk.Button(root, text="Görevi Tamamla", command=gorev_tamamla, font=("Helvetica", 12), bg="#9B59B6", fg="white", borderwidth=2)
+btn_tamamla.pack(pady=5)
 
+btn_sil = tk.Button(root, text="Görevi Sil", command=gorev_sil, font=("Helvetica", 12), bg="#D291BC", fg="white", borderwidth=2)
+btn_sil.pack(pady=5)
 
+btn_cikis = tk.Button(root, text="Çıkış", command=cikis, font=("Helvetica", 12), bg="#6C3483", fg="white", borderwidth=2)
+btn_cikis.pack(pady=10)
 
-
-
-
-
-
-
-
-
-
-
-
+gorevleri_guncelle()
+root.mainloop()
